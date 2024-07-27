@@ -5,10 +5,10 @@ import { FieldPath, Form } from "react-hook-form";
 import { Control } from "react-hook-form";
 import { z } from "zod";
 import { authFormSchema } from "@/lib/utils";
-
+const formSchema = authFormSchema('sign-up');
 interface CustomInputProps {
-  control: Control<z.infer<typeof authFormSchema>>; // Replace 'any' with the actual type of 'form'
-  name: FieldPath<z.infer<typeof authFormSchema>>; // Replace 'any' with the actual field names in your form schema
+  control: Control<z.infer<typeof formSchema>>; // Replace 'any' with the actual type of 'form'
+  name: FieldPath<z.infer<typeof formSchema>>; // Replace 'any' with the actual field names in your form schema
   label: string;
   placeholder: string;
 }
