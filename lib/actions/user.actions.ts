@@ -3,9 +3,16 @@
 import { ID } from "node-appwrite";
 import { createAdminClient, createSessionClient } from "../appwrite";
 import { cookies } from "next/headers";
-import { parseStringify } from "../utils";
-import { CountryCode, Products } from "plaid";
+import { encryptId, parseStringify } from "../utils";
+import {
+  CountryCode,
+  ProcessorTokenCreateRequest,
+  ProcessorTokenCreateRequestProcessorEnum,
+  Products,
+} from "plaid";
 import { plaidClient } from "../plaid";
+import { revalidatePath } from "next/cache";
+import { addFundingSource } from "./dwolla.actions";
 
 export const signIn = async ({ email, password }: signInProps) => {
   try {
@@ -93,9 +100,58 @@ export const exchangePublicTokenProps = async ({
     const response = await plaidClient.itemPublicTokenExchange({
       public_token: publicToken,
     });
+
     const accessToken = response.data.access_token;
     const itemId = response.data.item_id;
+    const accountsResponse = await plaidClient.accountsGet({
+      access_token: accessToken,
+    });
+
+    const accountData = accountsResponse.data.accounts[0];
+
+    const request: ProcessorTokenCreateRequest = {
+      access_token: accessToken,
+      account_id: accountData.account_id,
+      processor: "dwolla" as ProcessorTokenCreateRequestProcessorEnum,
+    };
+
+    const processorTokenResponse = await plaidClient.processorTokenCreate(
+      request
+    );
+    const processorToken = processorTokenResponse.data.processor_token;
+
+    const fundingSourceUrl = await addFundingSource({
+      dwollaCustomerId: user.$id,
+      processorToken: processorToken,
+      bankName: accountData.name,
+    });
+
+    //If the funding source URL si not created, throw an error
+    if (!fundingSourceUrl) throw Error;
+
+    // Create a bank account using hte user ID, item ID, account ID, access token, funding source URL, and sharable ID
+    await createBankAccount({
+      accessToken: accessToken,
+      userId: user.$id,
+      accountId: itemId,
+      bankId: accountData.account_id,
+      fundingSourceUrl,
+      sharableId: encryptId(accountData.account_id),
+    });
+
+    // Revalidate the path to reflect the changes
+    revalidatePath("/");
   } catch (error) {
     console.error("An error occurred while exchanging public token: ", error);
   }
 };
+function createBankAccount(arg0: {
+  accessToken: string;
+  userId: string;
+  accountId: string;
+  bankId: string;
+  fundingSourceUrl: any;
+  sharableId: string;
+}) {
+  throw new Error("Function not implemented.");
+}
