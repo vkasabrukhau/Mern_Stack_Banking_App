@@ -47,24 +47,23 @@ const AuthForm = ({ type }: { type: string }) => {
     setIsLoading(true);
     try {
       // Sign up with Appwrite and create plaid token
-
-      const userData = {
-        firstName: data.firstName!,
-        lastName: data.lastName!,
-        email: data.email,
-        password: data.password,
-        address: data.address!,
-        city: data.city!,
-        state: data.state!,
-        postalCode: data.postalCode!,
-        dateOfBirth: data.dateOfBirth!,
-        ssn: data.ssn!,
+      if(type=== 'sign-up'){
+          const userData = {
+            firstName: data.firstName!,
+            lastName: data.lastName!,
+            email: data.email,
+            password: data.password,
+            address1: data.address1!,
+            city: data.city!,
+            state: data.state!,
+            postalCode: data.postalCode!,
+            dateOfBirth: data.dateOfBirth!,
+            ssn: data.ssn!,
+          }
+          const newUser = await signUp(userData);
+          setUser(newUser);
       }
-
-      if (type === "sign-up") {
-        const newUser = await signUp(userData);
-        setUser(newUser);
-      } else if (type === "sign-in") {
+      else if (type === "sign-in") {
         const response = await signIn({
           email: data.email,
           password: data.password,
@@ -95,11 +94,17 @@ const AuthForm = ({ type }: { type: string }) => {
 
         <div className="flex flex-col gap-1 md:gap-3">
           <h1 className="text-24 lg:text-36 font-semibold text-gray-900">
-            {user ? "Link Account" : type === "sign-in" ? "Sign In" : "Sign Up"}
+            {user ? "Link Account" 
+            : type === "sign-in" 
+              ? "Sign In" 
+              : "Sign Up"
+            }
+
             <p className="text-16 font-normal text-gray-600">
               {user
                 ? "Link your account to get started"
-                : "Please enter your details"}
+                : "Please enter your details"
+              }
             </p>
           </h1>
         </div>
@@ -130,7 +135,7 @@ const AuthForm = ({ type }: { type: string }) => {
                   </div>
                   <CustomInput
                     control={form.control}
-                    name="address"
+                    name="address1"
                     label="Address"
                     placeholder="Enter your specific address"
                   />
