@@ -120,6 +120,7 @@ export async function getLoggedInUser() {
   try {
     const { account } = await createSessionClient();
     const result = await account.get();
+
     const user = await getUserInfo({ userId: result.$id });
     return parseStringify(user);
   } catch (error) {
@@ -152,7 +153,7 @@ export const createBankAccount = async ({
   accountId,
   bankId,
   fundingSourceUrl,
-  sharableId,
+  shareableId,
 }: createBankAccountProps) => {
   try {
     const { database } = await createAdminClient();
@@ -167,7 +168,7 @@ export const createBankAccount = async ({
         accountId,
         bankId,
         fundingSourceUrl,
-        sharableId,
+        shareableId,
       }
     );
   } catch (error) {}
@@ -202,7 +203,7 @@ export const exchangePublicToken = async ({
     const processorToken = processorTokenResponse.data.processor_token;
 
     const fundingSourceUrl = await addFundingSource({
-      dwollaCustomerId: user.$id,
+      dwollaCustomerId: user.dwollaCustomerId,
       processorToken: processorToken,
       bankName: accountData.name,
     });
@@ -210,14 +211,14 @@ export const exchangePublicToken = async ({
     //If the funding source URL si not created, throw an error
     if (!fundingSourceUrl) throw Error;
 
-    // Create a bank account using hte user ID, item ID, account ID, access token, funding source URL, and sharable ID
+    // Create a bank account using hte user ID, item ID, account ID, access token, funding source URL, and shareable ID
     await createBankAccount({
-      accessToken: accessToken,
       userId: user.$id,
       accountId: itemId,
       bankId: accountData.account_id,
+      accessToken: accessToken,
       fundingSourceUrl,
-      sharableId: encryptId(accountData.account_id),
+      shareableId: encryptId(accountData.account_id),
     });
 
     // Revalidate the path to reflect the changes
@@ -244,12 +245,12 @@ export const getBanks = async ({ userId }: getBanksProps) => {
 export const getBank = async ({ documentId }: getBankProps) => {
   try {
     const { database } = await createAdminClient();
-    const banks = await database.listDocuments(
+    const bank = await database.listDocuments(
       DATABASE_ID!,
       BANK_COLLECTION_ID!,
-      [Query.equal("userId", [documentId])]
+      [Query.equal("$id", [documentId])]
     );
-    return parseStringify(banks.documents[0]);
+    return parseStringify(bank.documents[0]);
   } catch (error) {
     console.log(error);
   }
