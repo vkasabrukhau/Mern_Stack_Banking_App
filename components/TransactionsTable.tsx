@@ -1,4 +1,3 @@
-import React from "react";
 import {
   Table,
   TableBody,
@@ -8,6 +7,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import { transactionCategoryStyles } from "@/constants";
 import {
   cn,
   formatAmount,
@@ -15,18 +15,17 @@ import {
   getTransactionStatus,
   removeSpecialCharacters,
 } from "@/lib/utils";
-import { transactionCategoryStyles } from "@/constants";
 
 const CategoryBadge = ({ category }: CategoryBadgeProps) => {
   const { borderColor, backgroundColor, textColor, chipBackgroundColor } =
     transactionCategoryStyles[
       category as keyof typeof transactionCategoryStyles
     ] || transactionCategoryStyles.default;
+
   return (
-    <div className={cn("category-badge, borderColor, chipBackgroundColor")}>
-      <div className={cn("size-2 rounded-full", backgroundColor)}>
-        <p className={cn("text-[12px] font-medium", textColor)}>{category}</p>
-      </div>
+    <div className={cn("category-badge", borderColor, chipBackgroundColor)}>
+      <div className={cn("size-2 rounded-full", backgroundColor)} />
+      <p className={cn("text-[12px] font-medium", textColor)}>{category}</p>
     </div>
   );
 };
@@ -34,7 +33,6 @@ const CategoryBadge = ({ category }: CategoryBadgeProps) => {
 const TransactionsTable = ({ transactions }: TransactionTableProps) => {
   return (
     <Table>
-      <TableCaption>A list of your recent invoices.</TableCaption>
       <TableHeader className="bg-[#f9fafb]">
         <TableRow>
           <TableHead className="px-2">Transaction</TableHead>
@@ -46,7 +44,7 @@ const TransactionsTable = ({ transactions }: TransactionTableProps) => {
         </TableRow>
       </TableHeader>
       <TableBody>
-        {transactions.map((t: Transaction) => {
+        {transactions?.map((t: Transaction) => {
           const status = getTransactionStatus(new Date(t.date));
           const amount = formatAmount(t.amount);
 
@@ -67,22 +65,29 @@ const TransactionsTable = ({ transactions }: TransactionTableProps) => {
                   </h1>
                 </div>
               </TableCell>
+
               <TableCell
                 className={`pl-2 pr-10 font-semibold ${
-                  isDebit || amount[0] === "-" ? "bg-[#f04438]" : "bg-[#039855]"
+                  isDebit || amount[0] === "-"
+                    ? "text-[#f04438]"
+                    : "text-[#039855]"
                 }`}
               >
                 {isDebit ? `-${amount}` : isCredit ? amount : amount}
               </TableCell>
+
               <TableCell className="pl-2 pr-10">
                 <CategoryBadge category={status} />
               </TableCell>
-              <TableCell className="pl-2 pr-10 min-w-32">
+
+              <TableCell className="min-w-32 pl-2 pr-10">
                 {formatDateTime(new Date(t.date)).dateTime}
               </TableCell>
+
               <TableCell className="pl-2 pr-10 capitalize min-w-24">
                 {t.paymentChannel}
               </TableCell>
+
               <TableCell className="pl-2 pr-10 max-md:hidden">
                 <CategoryBadge category={t.category} />
               </TableCell>
